@@ -1,0 +1,76 @@
+name: kontaro
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Diseño adaptativo
+  responsive_builder: ^0.7.0
+  flutter_screenutil: ^5.9.3
+
+  # Iconos
+  cupertino_icons: ^1.0.8
+  
+  # Escáner de códigos de barras (para TC15)
+  mobile_scanner: ^5.2.3
+  
+  # Manejo de archivos Excel
+  excel: ^4.0.6
+  file_picker: ^8.1.4
+  
+  # Navegación y estado
+  go_router: ^14.6.2
+  provider: ^6.1.2
+  
+  # API y base de datos
+  http: ^1.2.2
+  dio: ^5.7.0
+  sqflite: ^2.4.1
+  path_provider: ^2.1.5
+  
+  # Drift - ORM para Flutter/Dart
+  drift: ^2.18.0
+  drift_flutter: ^0.1.0
+  drift_sqflite: ^2.0.0
+  sqlite3_flutter_libs: ^0.5.0
+  path: ^1.9.0
+  
+  # Almacenamiento local
+  shared_preferences: ^2.3.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # UI y animaciones
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  
+  # Utilidades
+  intl: ^0.20.1
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Drift - Generador de código
+  drift_dev: ^2.18.0
+  build_runner: ^2.4.0
+
+  flutter_lints: ^5.0.0
+
+flutter:
+
+  uses-material-design: true
+
+  # Recursos de la aplicación (imágenes, logos, iconos)
+  assets:
+    - assets/images/
+    - assets/icons/
