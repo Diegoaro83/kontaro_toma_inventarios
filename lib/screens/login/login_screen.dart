@@ -1,10 +1,13 @@
+// 🖼️ Importa los widgets y componentes visuales de Flutter
 import 'package:flutter/material.dart';
+// 🎨 Colores y estilos personalizados de la app
 import '../../theme/app_colors.dart';
+// 🛡️ Modelo de roles/perfiles de usuario
 import '../../models/rol.dart';
+// 🚀 Pantalla de selección de módulos general (post-login)
 import '../modules/module_selector_screen.dart';
-import '../modules/auditor_modules_screen.dart';
 
-/// 🔐 PANTALLA DE LOGIN
+/// 🔐 PANTALLA DE LOGIN . es la primer pantalla de la appS
 ///
 /// Esta es la primera pantalla que verá el usuario.
 /// Aquí iniciará sesión con usuario, contraseña y seleccionará su perfil.
@@ -77,20 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Navegación al selector de módulos
     print('Login exitoso: $usuario - Rol: $_rolSeleccionado');
 
-    // 🎯 Si es Auditor (rol '5'), ir directo a su pantalla específica Figma
-    if (_rolSeleccionado == '5') {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => AuditorModulesScreen(
-            nombreUsuario: usuario,
-            rolNombre: _obtenerNombreRol(_rolSeleccionado!),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Para otros roles: Navegar a la pantalla de selección de módulos general
+    // Todos los roles navegan al selector de módulos general
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ModuleSelectorScreen(

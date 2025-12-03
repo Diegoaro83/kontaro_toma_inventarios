@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../theme/app_colors.dart';
 
@@ -65,7 +66,9 @@ class CreacionUsuariosDesktop extends StatelessWidget {
         actions: [
           TextButton.icon(
             onPressed: () {
-              Navigator.pushNamed(context, '/lista-usuarios');
+              /// 🚀 Navegación moderna con go_router
+              /// Lleva a la pantalla de lista de usuarios
+              context.go('/lista-usuarios');
             },
             icon: const Icon(Icons.list, color: Colors.white),
             label: const Text(

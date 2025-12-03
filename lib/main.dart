@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'theme/app_theme.dart';
 import 'config/app_config.dart';
 import 'screens/login/login_screen.dart';
@@ -48,9 +49,31 @@ void main() async {
 class KontaroApp extends StatelessWidget {
   const KontaroApp({super.key});
 
+  /// 🗺️ Definición de rutas con GoRouter
+  /// Incluye las rutas principales de la app
+  static final GoRouter _router = GoRouter(
+    initialLocation: '/login',
+    routes: [
+      /// 🚪 Ruta de Login
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+
+      /// 👥 Ruta de lista de usuarios
+      GoRoute(
+        path: '/lista-usuarios',
+        builder: (context, state) => const ListaUsuariosScreen(),
+      ),
+
+      /// 🛡️ Ruta de lista de roles
+      GoRoute(
+        path: '/lista-roles',
+        builder: (context, state) => const ListaRolesScreen(),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       // ===== CONFIGURACIÓN GENERAL =====
 
       /// Título de la app (aparece en el administrador de tareas)
@@ -62,14 +85,8 @@ class KontaroApp extends StatelessWidget {
       /// 🎨 Activar Material Design 3 (diseño moderno de Google)
       theme: AppTheme.lightTheme,
 
-      /// Pantalla inicial: Login
-      home: const LoginScreen(),
-
-      /// Rutas de navegación
-      routes: {
-        '/lista-usuarios': (context) => const ListaUsuariosScreen(),
-        '/lista-roles': (context) => const ListaRolesScreen(),
-      },
+      /// 🗺️ Configuración de GoRouter
+      routerConfig: _router,
     );
   }
 }

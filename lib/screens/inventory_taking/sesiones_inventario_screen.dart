@@ -687,16 +687,19 @@ class _SesionesInventarioScreenState extends State<SesionesInventarioScreen> {
           const SizedBox(height: 8),
           // Fila de progreso y papelera
           Row(
+            /// 🖥️ Fila responsive con Expanded para evitar overflow
             children: [
-              const Text(
-                'Progreso del inventario',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  'Progreso del inventario',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
               Text(
                 '${(porcentaje * 100).toStringAsFixed(0)}%',
                 style: const TextStyle(
@@ -785,19 +788,24 @@ class _SesionesInventarioScreenState extends State<SesionesInventarioScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
+
+                      /// 🖥️ Fila con Flexible para evitar overflow en el texto
+                      children: [
+                        const Icon(
                           Icons.qr_code_scanner,
                           size: 20,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Continuar Escaneo',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: const Text(
+                            'Continuar Escaneo',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

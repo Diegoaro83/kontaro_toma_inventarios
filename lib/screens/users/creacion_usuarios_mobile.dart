@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../theme/app_colors.dart';
 
@@ -66,7 +67,9 @@ class CreacionUsuariosMobile extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.list),
             onPressed: () {
-              Navigator.pushNamed(context, '/lista-usuarios');
+              /// 🚀 Navegación moderna con go_router
+              /// Lleva a la pantalla de lista de usuarios
+              context.go('/lista-usuarios');
             },
             tooltip: 'Ver usuarios',
           ),
