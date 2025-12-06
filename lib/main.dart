@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'theme/app_theme.dart';
 import 'config/app_config.dart';
 import 'screens/login/login_screen.dart';
-import 'screens/users/lista_usuarios_screen_temp.dart';
+// import eliminado: 'screens/users/lista_usuarios_screen_temp.dart'
+import 'screens/users/lista_usuarios_screen.dart';
 import 'screens/roles/lista_roles_screen.dart';
 import 'database/roles_iniciales.dart';
 import 'database/locales_iniciales.dart';

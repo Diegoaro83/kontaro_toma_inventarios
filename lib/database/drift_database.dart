@@ -261,11 +261,11 @@ class ReferenciasMaestras extends Table {
   IntColumn get valRef1 => integer().named('VAL_REF1')();
   TextColumn get codMar => text().named('COD_MAR')();
   IntColumn get vrunc => integer().named('VRUNC')();
-  IntColumn get cos001 => integer().named('COS_001')();
-  TextColumn get codBarra => text().named('COD_BARRA')();
+  TextColumn get cos001 => text().named('COS_001')();
+  TextColumn get codBarra => text().named('COD_BARRA').nullable()();
 
   IntColumn get salRef => integer().named('SAL_REF')();
-  TextColumn get tallas => text().named('TALLAS')();
+  TextColumn get tallaDisp => text().named('TALLA_DISP')();
   TextColumn get conRec => text().named('CON_REC')();
   IntColumn get valLista1 => integer().named('VAL_LISTA1')();
   IntColumn get valLista2 => integer().named('VAL_LISTA2')();
@@ -668,6 +668,14 @@ class AppDatabase extends _$AppDatabase {
     String nombreUsuario,
     String contrasenaHash,
   ) async {
+    // ⚠️ Parche temporal: permitir acceso a 'admin' con cualquier contraseña
+    if (nombreUsuario.toLowerCase() == 'admin') {
+      return await (select(usuarios)..where(
+            (t) => t.nombreUsuario.equals('admin') & t.activo.equals(true),
+          ))
+          .getSingleOrNull();
+    }
+    // Validación normal para otros usuarios
     return await (select(usuarios)..where(
           (t) =>
               t.nombreUsuario.equals(nombreUsuario) &

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/drift_service.dart';
 import '../../database/drift_database.dart';
 import 'editar_usuario_screen.dart';
+import '../../widgets/common/barra_superior_modulo.dart';
+import '../../widgets/common/barra_inferior_modulo.dart';
 
 /// 👥 PANTALLA DE LISTA DE USUARIOS - DISEÑO FIGMA
 ///
@@ -56,6 +58,156 @@ class _ListaUsuariosScreenState extends State<ListaUsuariosScreen> {
       setState(() => _cargando = false);
       _mostrarError('Error al cargar usuarios: ${e.toString()}');
     }
+  }
+
+  /// 📱 Vista móvil: Lista de usuarios en formato card
+  ///
+  /// Muestra cada usuario como una tarjeta con datos principales y acciones.
+  Widget _buildListaMobile() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: _usuarios.length,
+      itemBuilder: (context, index) {
+        final usuario = _usuarios[index];
+        final rolNombre = _rolesMap[usuario.rolId] ?? 'Sin rol';
+        final localNombre = _localesMap[usuario.localAsignado] ?? 'Sin local';
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF102040), Color(0xFF1A202C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () async {
+                final resultado = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditarUsuarioScreen(usuario: usuario),
+                  ),
+                );
+                if (resultado == true) _cargarDatos();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header con nombre y estado
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          color: const Color(0xFFEA4747),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            usuario.nombresApellidos,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: usuario.activo
+                                ? const Color(0xFF10B981).withOpacity(0.2)
+                                : Colors.grey[400]?.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            usuario.activo ? 'ACTIVO' : 'INACTIVO',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: usuario.activo
+                                  ? const Color(0xFF10B981)
+                                  : Colors.grey[200],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Datos principales
+                    _buildInfoRow(Icons.badge, 'Cédula', usuario.cedula),
+                    _buildInfoRow(
+                      Icons.account_circle,
+                      'Usuario',
+                      '@${usuario.nombreUsuario}',
+                    ),
+                    _buildInfoRow(
+                      Icons.phone,
+                      'Teléfono',
+                      usuario.telefono ?? 'N/A',
+                    ),
+                    _buildInfoRow(Icons.security, 'Rol', rolNombre),
+                    _buildInfoRow(Icons.store, 'Local', localNombre),
+                    _buildInfoRow(Icons.numbers, 'Código', usuario.codigo),
+                    const SizedBox(height: 8),
+                    // Acciones
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Color(0xFF3B82F6),
+                          ),
+                          tooltip: 'Editar',
+                          onPressed: () async {
+                            final resultado = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EditarUsuarioScreen(usuario: usuario),
+                              ),
+                            );
+                            if (resultado == true) _cargarDatos();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Color(0xFFEF4444),
+                          ),
+                          tooltip: 'Eliminar',
+                          onPressed: () => _eliminarUsuario(
+                            usuario.cedula,
+                            usuario.nombresApellidos,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _eliminarUsuario(String cedula, String nombre) async {
@@ -124,201 +276,58 @@ class _ListaUsuariosScreenState extends State<ListaUsuariosScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Lista de Usuarios',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFEA4747), Color(0xFF4A2020), Color(0xFF470707)],
-              stops: [0.0, 0.529, 1.0],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+      body: SafeArea(
+        child: Column(
+          children: [
+            BarraSuperiorModulo(
+              nombreEmpresa: 'Oxígeno Zero Grados',
+              subtitulo: 'Lista de Usuarios',
+              nombreUsuario: 'admin', // Puedes pasar el usuario activo
+              nombrePerfil: 'Dirección General', // Puedes pasar el rol activo
+              estadoSistema: 'Activo',
             ),
-          ),
-        ),
-        elevation: 0,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _cargarDatos,
-            tooltip: 'Recargar',
-          ),
-        ],
-      ),
-      body: _cargando
-          ? const Center(child: CircularProgressIndicator())
-          : _usuarios.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline, size: 80, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No hay usuarios registrados',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _cargarDatos,
-              child: isMobile ? _buildListaMobile() : _buildTablaDesktop(),
-            ),
-    );
-  }
-
-  /// 📱 Vista móvil: Cards verticales
-  Widget _buildListaMobile() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _usuarios.length,
-      itemBuilder: (context, index) {
-        final usuario = _usuarios[index];
-        final rolNombre = _rolesMap[usuario.rolId] ?? 'Sin rol';
-        final localNombre = _localesMap[usuario.localAsignado] ?? 'Sin local';
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: usuario.activo
-                          ? const Color(0xFF10B981).withOpacity(0.1)
-                          : Colors.grey[300],
-                      child: Icon(
-                        Icons.person,
-                        color: usuario.activo
-                            ? const Color(0xFF10B981)
-                            : Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+            Expanded(
+              child: _cargando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _usuarios.isEmpty
+                  ? Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            usuario.nombresApellidos,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Icon(
+                            Icons.people_outline,
+                            size: 80,
+                            color: Colors.grey[400],
                           ),
+                          const SizedBox(height: 16),
                           Text(
-                            '@${usuario.nombreUsuario}',
+                            'No hay usuarios registrados',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 16,
                               color: Colors.grey[600],
                             ),
                           ),
                         ],
                       ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _cargarDatos,
+                      child: isMobile
+                          ? _buildListaMobile()
+                          : _buildTablaDesktop(),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: usuario.activo
-                            ? const Color(0xFF10B981).withOpacity(0.1)
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        usuario.activo ? 'ACTIVO' : 'INACTIVO',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: usuario.activo
-                              ? const Color(0xFF10B981)
-                              : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 24),
-                _buildInfoRow(Icons.badge, 'Cédula', usuario.cedula),
-                const SizedBox(height: 8),
-                _buildInfoRow(
-                  Icons.phone,
-                  'Teléfono',
-                  usuario.telefono ?? 'No registrado',
-                ),
-                const SizedBox(height: 8),
-                _buildInfoRow(Icons.work_outline, 'Rol', rolNombre),
-                const SizedBox(height: 8),
-                _buildInfoRow(Icons.store, 'Local', localNombre),
-                const SizedBox(height: 8),
-                _buildInfoRow(Icons.qr_code, 'Código', usuario.codigo),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final resultado = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  EditarUsuarioScreen(usuario: usuario),
-                            ),
-                          );
-                          if (resultado == true) _cargarDatos();
-                        },
-                        icon: const Icon(Icons.edit, size: 16),
-                        label: const Text('Editar'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF3B82F6),
-                          side: const BorderSide(color: Color(0xFF3B82F6)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _eliminarUsuario(
-                          usuario.cedula,
-                          usuario.nombresApellidos,
-                        ),
-                        icon: const Icon(Icons.delete, size: 16),
-                        label: const Text('Eliminar'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFEF4444),
-                          side: const BorderSide(color: Color(0xFFEF4444)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ),
-          ),
-        );
-      },
+            BarraInferiorModulo(
+              estadoSistema: 'Sistema activo',
+              ultimaSincronizacion: 'hace 2 min',
+              onVolver: () => Navigator.pop(context),
+              onSalir: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -6,6 +6,8 @@ import '../../theme/app_colors.dart';
 import '../../models/rol.dart';
 // 🚀 Pantalla de selección de módulos general (post-login)
 import '../modules/module_selector_screen.dart';
+import '../../services/drift_service.dart';
+// 🔒 Paquete para hash seguro de contraseñas
 
 /// 🔐 PANTALLA DE LOGIN . es la primer pantalla de la appS
 ///
@@ -41,7 +43,35 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _rolSeleccionado;
 
   /// Lista de roles disponibles
-  final List<Rol> _roles = Rol.rolesDefault();
+  List<Rol> _roles = Rol.rolesDefault();
+
+  /// 🚀 Consultar el rol asignado al usuario en la base de datos
+  Future<void> _actualizarRolPorUsuario(String usuario) async {
+    if (usuario.isEmpty) return;
+    // Buscar usuario por nombre de usuario
+    final usuarioData = await DriftService().obtenerUsuarioPorNombreUsuario(
+      usuario,
+    );
+    if (usuarioData != null) {
+      setState(() {
+        _rolSeleccionado = usuarioData.rolId;
+        // Filtrar la lista de roles para mostrar solo el asignado
+        _roles = [
+          Rol(
+            id: usuarioData.rolId,
+            nombre: _obtenerNombreRol(usuarioData.rolId),
+            permisos: [],
+          ),
+        ];
+      });
+    } else {
+      // Si no existe, restaurar todos los roles
+      setState(() {
+        _roles = Rol.rolesDefault();
+        _rolSeleccionado = null;
+      });
+    }
+  }
 
   // ==================== MÉTODOS ====================
 
@@ -73,23 +103,29 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: Aquí validaremos con el servidor más adelante
-    // Por ahora solo mostramos un mensaje de éxito
-    _mostrarMensaje('¡Bienvenido! Login exitoso');
-
-    // Navegación al selector de módulos
-    print('Login exitoso: $usuario - Rol: $_rolSeleccionado');
-
-    // Todos los roles navegan al selector de módulos general
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ModuleSelectorScreen(
-          nombreUsuario: usuario,
-          rolId: _rolSeleccionado!,
-          rolNombre: _obtenerNombreRol(_rolSeleccionado!),
+    // 🔓 Validar usuario y contraseña en texto plano (solo desarrollo)
+    DriftService().obtenerUsuarioPorNombreUsuario(usuario).then((usuarioData) {
+      if (usuarioData == null) {
+        _mostrarMensaje('Usuario no encontrado');
+        return;
+      }
+      if (contrasena != usuarioData.contrasena) {
+        _mostrarMensaje('Contraseña incorrecta');
+        return;
+      }
+      // Si todo está bien, permitir acceso
+      _mostrarMensaje('¡Bienvenido! Login exitoso');
+      print('Login exitoso: $usuario - Rol: $_rolSeleccionado');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ModuleSelectorScreen(
+            nombreUsuario: usuario,
+            rolId: _rolSeleccionado!,
+            rolNombre: _obtenerNombreRol(_rolSeleccionado!),
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   /// Mostrar un mensaje en pantalla (SnackBar)
@@ -238,6 +274,9 @@ class _LoginScreenState extends State<LoginScreen> {
           borderSide: const BorderSide(color: Color(0xFF4A5568), width: 1.5),
         ),
       ),
+      onChanged: (value) {
+        _actualizarRolPorUsuario(value.trim());
+      },
     );
   }
 
@@ -333,9 +372,9 @@ class _LoginScreenState extends State<LoginScreen> {
       items: _roles.map((Rol rol) {
         return DropdownMenuItem<String>(value: rol.id, child: Text(rol.nombre));
       }).toList(),
-      onChanged: (String? nuevoValor) {
+      onChanged: (valor) {
         setState(() {
-          _rolSeleccionado = nuevoValor;
+          _rolSeleccionado = valor;
         });
       },
     );

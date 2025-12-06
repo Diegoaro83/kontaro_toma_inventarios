@@ -22,62 +22,59 @@ class ModuloCardGeneral extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 🎨 Gradiente para el borde usando CustomPainter
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF181A2F), // Fondo azul oscuro
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: CustomPaint(
-          painter: _GradientBorderPainter(colorIcono: colorIcono),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: colorIcono.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(12),
+    return SizedBox(
+      width: double.infinity,
+      height: 70,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF181A2F),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: CustomPaint(
+            painter: _GradientBorderPainter(colorIcono: colorIcono),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: colorIcono.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(icono, color: colorIcono, size: 20),
                   ),
-                  padding: const EdgeInsets.all(16),
-                  child: Icon(icono, color: colorIcono, size: 36),
-                ),
-                const SizedBox(width: 28),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         titulo,
                         style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Arial',
+                          fontSize: 13, // texto del título más pequeño
+                          fontWeight: FontWeight.w400,
                           color: Colors.white,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        descripcion,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFFB0B6C8),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 18),
-                Icon(
-                  Icons.arrow_right_alt_rounded,
-                  color: colorIcono,
-                  size: 32,
-                ),
-              ],
+                  const SizedBox(width: 18),
+                  Icon(
+                    Icons.arrow_right_alt_rounded,
+                    color: colorIcono,
+                    size: 32,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

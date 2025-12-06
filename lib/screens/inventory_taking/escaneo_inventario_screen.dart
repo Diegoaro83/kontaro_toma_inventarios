@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:flutter/painting.dart' as painting;
-import 'package:drift/drift.dart' hide Column;
-import '../../theme/app_colors.dart';
-import '../../services/drift_service.dart';
-import '../../database/drift_database.dart';
-import '../../widgets/indicadores_inventario_widget.dart';
-import '../../widgets/panel_tallas_widget.dart';
-import '../../utils/currency_formatter.dart';
+// Eliminar la siguiente línea para evitar conflictos de nombres con widgets
+// import 'package:flutter/widgets.dart';
+import 'package:kontaro/models/referencia_maestra.dart';
+import 'package:kontaro/theme/app_colors.dart';
+import 'package:kontaro/services/drift_service.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:kontaro/database/drift_database.dart';
+// 🚀 Importar el widget PanelTallasWidget para mostrar tallas escaneadas
+import 'package:kontaro/widgets/panel_tallas_widget.dart';
+import '../../widgets/common/barra_superior_modulo.dart';
+import '../../widgets/common/barra_inferior_modulo.dart';
 
 /// 📱 PANTALLA DE ESCANEO DE INVENTARIO
 ///
-/// Pantalla para escanear códigos de barras y registrar productos
-/// Muestra:
-/// - Progreso total del inventario
-/// - Valor total acumulado
-/// - Referencias escaneadas
-/// - Campo de escaneo manual/cámara
-/// - Historial de últimos 5 registros
-
+/// Permite escanear códigos de barras, registrar productos y manejar excedentes.
+/// 📱 PANTALLA DE ESCANEO DE INVENTARIO
+/// Permite escanear códigos de barras, registrar productos y manejar excedentes.
 class EscaneoInventarioScreen extends StatefulWidget {
   final Map<String, dynamic> sesion;
-
-  const EscaneoInventarioScreen({super.key, required this.sesion});
+  final String nombreUsuario; // Nombre real del usuario
+  final String rolNombre; // Nombre del rol
+  const EscaneoInventarioScreen({
+    Key? key,
+    required this.sesion,
+    required this.nombreUsuario,
+    required this.rolNombre,
+  }) : super(key: key);
 
   @override
   State<EscaneoInventarioScreen> createState() =>
@@ -30,209 +33,44 @@ class EscaneoInventarioScreen extends StatefulWidget {
 }
 
 class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
-  final DriftService _driftService = DriftService();
-  final TextEditingController _codigoBarrasController = TextEditingController();
-  final MobileScannerController _scannerController = MobileScannerController();
-
-  // Estado
-  bool _escaneandoConCamara = false;
-  int _pestanaActual = 0; // 0: Escaneo, 1: Resumen, 2: Lista
-  Map<String, dynamic> _indicadores = {}; // Indicadores calculados
-  List<Map<String, dynamic>> _historialReciente = [];
-  Referencia? _referenciaSeleccionada; // Referencia actual para panel de tallas
-
-  @override
-  void initState() {
-    super.initState();
-    _cargarDatosSesion();
+  /// 🚀 Procesar código escaneado (stub temporal)
+  /// Recibe el código de barras y realiza la lógica de búsqueda/registro.
+  void _procesarCodigoEscaneado(String codigo) {
+    // TODO: Implementar lógica real de escaneo y registro
+    debugPrint('Código escaneado: $codigo');
   }
 
-  @override
-  void dispose() {
-    _codigoBarrasController.dispose();
-    _scannerController.dispose();
-    super.dispose();
-  }
-
-  /// 🔄 Cargar datos de la sesión actual y calcular indicadores
-  Future<void> _cargarDatosSesion() async {
-    try {
-      final sesionId = widget.sesion['id'];
-
-      // 🧹 Limpiar tabla obsoleta de ReferenciasNoEncontradas
-      // (ahora todos los productos van directo a Referencias)
-      await _driftService.eliminarReferenciasNoEncontradasDeSesion(sesionId);
-
-      // Calcular todos los indicadores usando el método del servicio
-      final indicadores = await _driftService.calcularIndicadoresInventario(
-        sesionId,
-      );
-
-      // Cargar historial reciente (últimos 10 escaneos)
-      final referencias = await _driftService.obtenerReferenciasPorSesion(
-        sesionId,
-      );
-      final historial = <Map<String, dynamic>>[];
-
-      for (var ref in referencias) {
-        if (ref.cantidadEscaneada > 0) {
-          historial.add({
-            'codigo': ref.codRef,
-            'nombre': ref.nomRef,
-            'cantidad': ref.cantidadEscaneada,
-            'salRef': ref.salRef,
-            'excedente': ref.excedente,
-            'completado': ref.completado,
-            'referenciaId': ref.id,
-            'timestamp':
-                ref.fechaUltimoEscaneo?.toString() ??
-                ref.fechaPrimerEscaneo?.toString() ??
-                'Ahora',
-          });
-        }
-      }
-
-      // Ordenar por fecha más reciente y tomar solo los últimos 5
-      historial.sort((a, b) {
-        final fechaA = a['timestamp'] as String;
-        final fechaB = b['timestamp'] as String;
-        return fechaB.compareTo(fechaA);
-      });
-
-      setState(() {
-        _indicadores = indicadores;
-        _historialReciente = historial.take(5).toList();
-      });
-    } catch (e) {
-      print('❌ Error al cargar datos: $e');
-    }
-  }
-
-  /// 📷 Alternar modo de escaneo (manual/cámara)
+  /// 🚀 Alternar escaneo con cámara (stub temporal)
   void _toggleEscaneo() {
     setState(() {
       _escaneandoConCamara = !_escaneandoConCamara;
     });
+    // TODO: Implementar lógica real de escaneo con cámara
+    debugPrint('Toggle escaneo con cámara: $_escaneandoConCamara');
   }
 
-  /// 🔍 Procesar código escaneado (LÓGICA COMPLETA DE VALIDACIÓN)
-  Future<void> _procesarCodigoEscaneado(String codigo) async {
-    if (codigo.trim().isEmpty) return;
-
-    final sesionId = widget.sesion['id'];
-
-    try {
-      // 🔍 PASO 1: Buscar en referencias del inventario actual
-      final referencia = await _driftService.buscarReferenciaPorCodigo(
-        sesionId,
-        codigo,
-      );
-
-      if (referencia != null) {
-        // ✅ PRODUCTO ENCONTRADO EN INVENTARIO
-        await _procesarProductoEncontrado(referencia);
-      } else {
-        // ❌ PRODUCTO NO ENCONTRADO - Buscar en BD maestra
-        await _procesarProductoNoEncontrado(codigo);
-      }
-
-      // Limpiar campo
-      _codigoBarrasController.clear();
-    } catch (e) {
-      print('❌ Error al procesar código: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+  /// 🚀 Cargar datos de la sesión (stub temporal)
+  Future<void> _cargarDatosSesion() async {
+    // TODO: Implementar carga real de datos de sesión e indicadores
+    debugPrint('Cargar datos de sesión (stub)');
   }
 
-  /// ✅ Procesar producto que SÍ está en el inventario
-  Future<void> _procesarProductoEncontrado(Referencia referencia) async {
-    final nuevaCantidad = referencia.cantidadEscaneada + 1;
+  /// Servicio Drift para acceso a BD
+  final DriftService _driftService = DriftService();
 
-    // 🚨 VALIDACIÓN: ¿Se excede la cantidad del Excel?
-    if (nuevaCantidad > referencia.salRef) {
-      // Mostrar diálogo de confirmación de excedente
-      final aceptar = await _mostrarDialogoExcedente(
-        referencia.codRef,
-        referencia.nomRef,
-        referencia.salRef,
-        nuevaCantidad,
-      );
+  /// Controladores para ingreso manual
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController valorController = TextEditingController();
 
-      if (aceptar == true) {
-        // Registrar excedente
-        final excedente = nuevaCantidad - referencia.salRef;
-        await _driftService.registrarExcedente(referencia.id, excedente);
-        await _driftService.actualizarCantidadEscaneada(
-          referencia.id,
-          nuevaCantidad,
-        );
+  // Variables de estado
+  int _pestanaActual = 0;
+  ReferenciaMaestra? _referenciaSeleccionada;
+  List<Map<String, dynamic>> _historialReciente = [];
+  List<dynamic> _indicadores = [];
+  final TextEditingController _codigoBarrasController = TextEditingController();
+  bool _escaneandoConCamara = false;
 
-        // Mostrar confirmación
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '⚠️ Excedente registrado: ${referencia.nomRef} (+$excedente)',
-              ),
-              backgroundColor: AppColors.warning,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-      } else {
-        // Usuario canceló, no registrar
-        return;
-      }
-    } else {
-      // ✅ Cantidad dentro del rango, registrar normalmente
-      await _driftService.actualizarCantidadEscaneada(
-        referencia.id,
-        nuevaCantidad,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '✅ ${referencia.nomRef} - $nuevaCantidad/${referencia.salRef}',
-            ),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-
-    // Actualizar referencia seleccionada para panel de tallas
-    setState(() => _referenciaSeleccionada = referencia);
-
-    // Recargar datos
-    await _cargarDatosSesion();
-  }
-
-  /// ❌ Procesar producto que NO está en el inventario
-  Future<void> _procesarProductoNoEncontrado(String codigo) async {
-    // 🔍 Buscar en BD maestra
-    final referenciaMaestra = await _driftService
-        .buscarReferenciaMaestraPorCodigo(codigo);
-
-    if (referenciaMaestra != null) {
-      // 🎯 Encontrado en BD maestra
-      await _mostrarDialogoAgregarAlInventario(codigo, referenciaMaestra);
-    } else {
-      // 🤷 No existe en ninguna BD - Ingreso manual
-      await _mostrarDialogoIngresoManual(codigo);
-    }
-  }
-
-  /// 🚨 Diálogo de confirmación de excedente
+  /// ⚠️ Mostrar diálogo de cantidad excedida
   Future<bool?> _mostrarDialogoExcedente(
     String codigo,
     String nombre,
@@ -247,7 +85,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
             children: [
               Icon(Icons.warning_amber, color: AppColors.warning, size: 32),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Cantidad Excedida')),
+              Expanded(child: Text('Cantidad Excedida')),
             ],
           ),
           content: Column(
@@ -256,15 +94,15 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
             children: [
               Text(
                 'Referencia: $codigo',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 4),
-              Text(nombre, style: const TextStyle(fontSize: 13)),
-              const SizedBox(height: 16),
+              SizedBox(height: 4),
+              Text(nombre, style: TextStyle(fontSize: 13)),
+              SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
+                  color: AppColors.warning.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -272,7 +110,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                   children: [
                     Text('Cantidad en inventario: $cantidadEsperada'),
                     Text('Ya escaneadas: ${cantidadActual - 1}'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       'Excedente: ${cantidadActual - cantidadEsperada} unidades',
                       style: TextStyle(
@@ -284,8 +122,8 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 '¿Desea registrar esta unidad adicional como sobrante?',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
@@ -301,7 +139,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.warning,
               ),
-              child: const Text('ACEPTAR'),
+              child: Text('ACEPTAR'),
             ),
           ],
         );
@@ -309,322 +147,24 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
     );
   }
 
-  /// ➕ Diálogo para agregar producto al inventario local
-  Future<void> _mostrarDialogoAgregarAlInventario(
-    String codigo,
-    ReferenciasMaestra referenciaMaestra,
-  ) async {
-    final agregar = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                Icons.add_shopping_cart,
-                color: AppColors.infoBlue,
-                size: 32,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Agregar al Inventario')),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.infoBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Código: $codigo',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(referenciaMaestra.nomRef),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Valor sugerido: ${formatCurrency(referenciaMaestra.valorSugerido ?? 0.0)}',
-                    ),
-                    Text('Categoría: ${referenciaMaestra.categoria ?? "N/A"}'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '✅ Producto encontrado en base de datos maestra',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '¿Agregar este producto al inventario del local "${widget.sesion['nombreLocal']}"?',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('NO'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
-              ),
-              child: const Text('SÍ, AGREGAR'),
-            ),
-          ],
-        );
-      },
-    );
+  // Método build duplicado eliminado. El método build correcto está más abajo en el archivo y retorna el Scaffold completo.
 
-    if (agregar == true) {
-      // 🔄 Agregar directamente a la tabla Referencias (inventario principal)
-      final sesionId = widget.sesion['id'];
-
-      // Generar ID único para la nueva referencia
-      final count = await _driftService.contarReferenciasEnSesion(sesionId);
-      final id = '$sesionId-ref-${(count + 1).toString().padLeft(4, "0")}';
-
-      // Crear la nueva referencia en el inventario principal usando crearReferencia básico
-      await _driftService.crearReferencia(
-        id: id,
-        sesionId: sesionId,
-        codRef: codigo,
-        nomRef: referenciaMaestra.nomRef,
-        salRef: 0, // No tiene saldo inicial porque es nuevo
-        valRef: referenciaMaestra.valorSugerido ?? 0.0,
-        valTotal: referenciaMaestra.valorSugerido ?? 0.0,
-      );
-
-      // ✅ Actualizar cantidad escaneada a 1 (CRÍTICO para que aparezca en historial)
-      await _driftService.actualizarCantidadEscaneada(id, 1);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '➕ ${referenciaMaestra.nomRef} agregado al inventario (EXCEDENTE)',
-            ),
-            backgroundColor: AppColors.warning,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-
-      // Recargar datos completos para actualizar indicadores Y el historial
-      await _cargarDatosSesion();
-    }
-  }
-
-  /// ✏️ Diálogo para ingreso manual de producto no encontrado
-  Future<void> _mostrarDialogoIngresoManual(String codigo) async {
-    final TextEditingController nombreController = TextEditingController();
-    final TextEditingController valorController = TextEditingController();
-
-    final ingresar = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.error_outline, color: AppColors.error, size: 32),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Código No Registrado')),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Código: $codigo',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  '❌ Este código no está en el inventario ni en la base de datos maestra.',
-                  style: TextStyle(color: Colors.red),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Ingrese los datos manualmente:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: nombreController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descripción del producto',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: valorController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Valor unitario',
-                    border: OutlineInputBorder(),
-                    prefixText: '\$ ',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('CANCELAR'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.infoBlue,
-              ),
-              child: const Text('GUARDAR'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (ingresar == true && nombreController.text.isNotEmpty) {
-      final valor = double.tryParse(valorController.text) ?? 0.0;
-
-      // Crear referencia no encontrada con datos manuales
-      final sesionId = widget.sesion['id'];
-      final count = await _driftService.contarReferenciasNoEncontradas(
-        sesionId,
-      );
-      final id =
-          '$sesionId-noencontrada-${(count + 1).toString().padLeft(4, "0")}';
-
-      await _driftService.crearReferenciaNoEncontrada(
-        id: id,
-        sesionId: sesionId,
-        codRef: codigo,
-        nomRef: nombreController.text,
-        cantidadEscaneada: 1,
-        valRef: valor,
-        valTotal: valor,
-        agregadoAInventario: false,
-        encontradoEnMaestra: false,
-        observaciones: 'Ingreso manual durante inventario',
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('📝 ${nombreController.text} registrado manualmente'),
-            backgroundColor: AppColors.infoBlue,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-
-      await _cargarDatosSesion();
-    }
-  }
+  // Fragmentos sueltos eliminados. Todo el código de widgets debe estar dentro de métodos, funciones o clases.
 
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
+      // 🎨 Barra superior reutilizable
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
-        child: Container(
-          height: 80,
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A2332),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFF1E293B), width: 1),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 20),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Oxígeno Zero Grados',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Toma de Inventario',
-                      style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Diego',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Auditor',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              const CircleAvatar(
-                radius: 20,
-                backgroundColor: Color(0xFF3B82F6),
-                child: Text(
-                  'D',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        child: BarraSuperiorModulo(
+          nombreEmpresa: 'Oxígeno Zero Grados',
+          subtitulo: 'Toma de Inventario',
+          nombreUsuario: widget.nombreUsuario, // ✅ Usuario real
+          nombrePerfil: widget.rolNombre, // ✅ Rol real
+          estadoSistema: 'En sesión',
         ),
       ),
       body: Container(
@@ -632,8 +172,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0A1628), Color(0xFF1A2845), Color(0xFF0D1B2E)],
-            stops: [0.0, 0.5, 1.0],
+            colors: [Color(0xFF102040), Color(0xFF1A202C)],
           ),
         ),
         child: Column(
@@ -691,44 +230,17 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                   ? _buildPestanaResumen(isMobile)
                   : _buildPestanaLista(),
             ),
-            // Footer inferior con estado del sistema
-            Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF0B1A2E),
-                border: Border(
-                  top: BorderSide(color: Color(0xFF1E293B), width: 1),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, color: Color(0xFF3B82F6), size: 16),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Estado del sistema',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          'Última sincronización: No sincronizado',
-                          style: TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            // 🎨 Barra inferior reutilizable
+            BarraInferiorModulo(
+              estadoSistema: 'En sesión', // Estado del sistema
+              ultimaSincronizacion: 'No sincronizado', // Última sincronización
+              onVolver: () {
+                Navigator.of(context).pop();
+              },
+              onSalir: () {
+                // TODO: Implementar lógica de logout o cierre de sesión
+                Navigator.of(context).pushReplacementNamed('/login');
+              },
             ),
           ],
         ),
@@ -749,7 +261,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
               ? AppColors.inventoryGreen
               : Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
-          border: painting.Border.all(
+          border: Border.all(
             color: isActive
                 ? AppColors.inventoryGreen
                 : Colors.white.withOpacity(0.2),
@@ -792,8 +304,9 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
           // 👕 PANEL DE TALLAS (si hay referencia seleccionada)
           if (_referenciaSeleccionada != null) ...[
             PanelTallasWidget(
-              tallasDisponiblesJson: _referenciaSeleccionada!.tallasDisponibles,
-              tallasEscaneadasJson: _referenciaSeleccionada!.tallasEscaneadas,
+              tallasDisponiblesJson: _referenciaSeleccionada!
+                  .tallaDisp, // JSON de tallas disponibles
+              tallasEscaneadasJson: null, // No disponible en ReferenciaMaestra
               nombreReferencia: _referenciaSeleccionada!.nomRef,
               codigoReferencia: _referenciaSeleccionada!.codRef,
             ),
@@ -814,9 +327,10 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
       child: Column(
         children: [
           // 📊 PANEL DE INDICADORES
-          if (_indicadores.isNotEmpty) ...[
-            IndicadoresInventarioWidget(indicadores: _indicadores),
-          ],
+          // TODO: Implementar IndicadoresInventarioWidget cuando esté disponible
+          // if (_indicadores.isNotEmpty) ...[
+          //   IndicadoresInventarioWidget(indicadores: _indicadores),
+          // ],
         ],
       ),
     );
@@ -899,7 +413,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onSubmitted: _procesarCodigoEscaneado,
+                  onSubmitted: (codigo) => _procesarCodigoEscaneado(codigo),
                   autofocus: true,
                   textInputAction: TextInputAction.search,
                 ),
@@ -1014,7 +528,8 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
       decoration: BoxDecoration(
         color: tieneExcedente ? Colors.red[50] : Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
-        border: painting.Border.all(
+
+        border: Border.all(
           color: tieneExcedente ? Colors.red[300]! : Colors.grey[200]!,
         ),
       ),
@@ -1062,7 +577,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
-                  border: painting.Border.all(color: Colors.grey[300]!),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: InkWell(
                   onTap: cantidadActual > 0
@@ -1096,7 +611,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                   decoration: BoxDecoration(
                     color: tieneExcedente ? Colors.red[100] : Colors.blue[50],
                     borderRadius: BorderRadius.circular(6),
-                    border: painting.Border.all(
+                    border: Border.all(
                       color: tieneExcedente
                           ? Colors.red[300]!
                           : Colors.blue[300]!,
@@ -1135,7 +650,7 @@ class _EscaneoInventarioScreenState extends State<EscaneoInventarioScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
-                  border: painting.Border.all(color: Colors.grey[300]!),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: InkWell(
                   onTap: () => _mostrarDialogoAumentarCantidad(

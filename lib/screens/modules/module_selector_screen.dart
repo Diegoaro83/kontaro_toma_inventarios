@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/common/modulo_card_general.dart';
 import '../../widgets/common/barra_inferior_modulo.dart';
 import '../../widgets/common/barra_superior_modulo.dart';
-import 'modulo_direccion_general.dart';
-import 'modulo_administrador.dart';
-import 'modulo_gestor_punto.dart';
-import 'modulo_asesor_comercial.dart';
-import 'modulo_auditor.dart';
+import '../users/creacion_usuario_screen.dart';
+import '../users/lista_usuarios_screen.dart';
+import '../inventory_taking/inventory_taking_screen.dart';
+import '../cyclical_inventory/cyclical_inventory_screen.dart';
+import '../references_query/references_query_screen.dart';
+import '../references_query/maestra_referencias_screen.dart';
 
 /// 📱💻 PANTALLA ADAPTATIVA DE SELECCIÓN DE MÓDULOS
 ///
@@ -39,13 +40,6 @@ class ModuleSelectorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final modulos = _obtenerModulosPorRol(rolId);
     final screenWidth = MediaQuery.of(context).size.width;
-    int crossAxisCount = 1;
-    if (screenWidth >= 900) {
-      crossAxisCount = 3; // Desktop
-    } else if (screenWidth >= 600) {
-      crossAxisCount = 2; // Tablet
-    }
-    final aspectRatio = 1.8;
     final esDireccionGeneral = rolNombre.toLowerCase().contains(
       'dirección general',
     );
@@ -100,20 +94,16 @@ class ModuleSelectorScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            // 🖼️ El GridView ahora está directamente en el Expanded del Column principal
+            // 🖼️ Lista vertical de módulos con espaciado 16px
             Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: screenWidth < 600 ? 16 : 40,
                 ),
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    childAspectRatio: aspectRatio,
-                    crossAxisSpacing: 24,
-                    mainAxisSpacing: 24,
-                  ),
+                child: ListView.separated(
                   itemCount: modulosConMaestra.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final modulo = modulosConMaestra[index];
                     return ModuloCardGeneral(
@@ -236,46 +226,76 @@ class ModuleSelectorScreen extends StatelessWidget {
 
   /// Navega al módulo seleccionado
   void _abrirModulo(BuildContext context, String nombreModulo) {
-    /// 🔀 Navegación por rol: cada usuario accede a su módulo personalizado
-    switch (rolId) {
-      case '1': // Dirección General
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ModuloDireccionGeneral()),
-        );
-        break;
-      case '2': // Administrador
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ModuloAdministrador()),
-        );
-        break;
-      case '3': // Gestor de Punto
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ModuloGestorPunto()),
-        );
-        break;
-      case '4': // Asesor Comercial
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ModuloAsesorComercial()),
-        );
-        break;
-      case '5': // Auditor
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ModuloAuditor()),
-        );
-        break;
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Rol no reconocido: $rolId'),
-            duration: const Duration(seconds: 2),
-            backgroundColor: Colors.red,
+    /// 🔀 Navegación por módulo seleccionado
+    if (nombreModulo == 'Creación de Usuarios') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CreacionUsuarioScreen()),
+      );
+    } else if (nombreModulo == 'Lista de Usuarios') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ListaUsuariosScreen()),
+      );
+    } else if (nombreModulo == 'Toma de Inventario') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InventoryTakingScreen(
+            nombreUsuario: nombreUsuario,
+            rolNombre: rolNombre,
           ),
-        );
+        ),
+      );
+    } else if (nombreModulo == 'Inventarios Cíclicos') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CyclicalInventoryScreen()),
+      );
+    } else if (nombreModulo == 'Consultas de Referencias') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReferencesQueryScreen()),
+      );
+    } else if (nombreModulo == 'Maestra de Referencias') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MaestraReferenciasScreen(
+            nombreUsuario: nombreUsuario,
+            nombrePerfil: rolNombre,
+          ),
+        ),
+      );
+    } else if (nombreModulo == 'Panel Administrativo') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Módulo Panel Administrativo aún no implementado'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else if (nombreModulo == 'Punto de Venta') {
+      // Aquí deberías poner la pantalla real del punto de venta
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Módulo Punto de Venta aún no implementado'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else if (nombreModulo == 'Gestión de Roles') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Módulo Gestión de Roles aún no implementado'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Módulo no reconocido: $nombreModulo'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

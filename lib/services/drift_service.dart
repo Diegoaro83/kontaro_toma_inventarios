@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import '../database/drift_database.dart';
+import '../models/referencia_maestra.dart';
 
 /// 🚀 SERVICIO DE BASE DE DATOS CON DRIFT
 ///
@@ -14,6 +15,73 @@ import '../database/drift_database.dart';
 /// - ✅ Migraciones automáticas
 
 class DriftService {
+  /// 🔍 BUSCAR REFERENCIAS POR CÓDIGO O NOMBRE
+  ///
+  /// Realiza una búsqueda eficiente en la base de datos usando LIKE sobre COD_REF y NOM_REF.
+  /// Devuelve solo las referencias que coinciden parcial o totalmente con el texto ingresado.
+  Future<List<ReferenciaMaestra>> buscarReferencias(String query) async {
+    if (query.trim().isEmpty) {
+      // Si la búsqueda está vacía, retorna todas ordenadas por nombre
+      return obtenerTodasReferenciasMaestras();
+    }
+    final filtro = '%${query.trim().toLowerCase()}%';
+    final resultados =
+        await (_db.select(_db.referenciasMaestras)
+              ..where(
+                (tbl) =>
+                    tbl.codRef.lower().like(filtro) |
+                    tbl.nomRef.lower().like(filtro),
+              )
+              ..orderBy([(tbl) => drift.OrderingTerm(expression: tbl.nomRef)]))
+            .get();
+    // Convertir cada resultado de Drift al modelo Dart
+    return resultados.map((row) => ReferenciaMaestra.fromDrift(row)).toList();
+  }
+
+  /// 🗑️ ELIMINAR TODAS LAS REFERENCIAS MAESTRAS
+  /// Borra todas las filas de la tabla ReferenciasMaestras.
+  Future<void> eliminarTodasReferenciasMaestras() async {
+    await _db.delete(_db.referenciasMaestras).go();
+  }
+
+  /// 🔍 OBTENER TODAS LAS REFERENCIAS MAESTRAS
+  /// Devuelve todas las referencias maestras ordenadas por nombre.
+  Future<List<ReferenciaMaestra>> obtenerTodasReferenciasMaestras() async {
+    final resultados = await (_db.select(
+      _db.referenciasMaestras,
+    )..orderBy([(tbl) => drift.OrderingTerm(expression: tbl.nomRef)])).get();
+    return resultados.map((row) => ReferenciaMaestra.fromDrift(row)).toList();
+  }
+
+  /// ➕ INSERTAR REFERENCIA MAESTRA DESDE MODELO DART
+  /// Convierte ReferenciaMaestra a ReferenciasMaestrasCompanion y la inserta en la BD.
+  Future<void> insertarReferenciaMaestra(ReferenciaMaestra ref) async {
+    final companion = ReferenciasMaestrasCompanion(
+      codRef: drift.Value(ref.codRef),
+      nomRef: drift.Value(ref.nomRef),
+      codTip: drift.Value(ref.codTip),
+      codPrv: drift.Value(ref.codPrv),
+      valRef: drift.Value(ref.valRef.toInt()),
+      codEmp: drift.Value(ref.codEmp),
+      nomRef1: drift.Value(ref.nomRef1),
+      nomRef2: drift.Value(ref.nomRef2),
+      refPrv: drift.Value(ref.refPrv),
+      valRef1: drift.Value(ref.valRef1.toInt()),
+      codMar: drift.Value(ref.codMar),
+      vrunc: drift.Value(ref.vrunc.toInt()),
+      cos001: drift.Value(ref.cos001),
+      codBarra: drift.Value(ref.codBarra),
+      salRef: drift.Value(ref.salRef),
+      tallaDisp: drift.Value(ref.tallaDisp),
+      conRec: drift.Value(ref.conRec),
+      valLista1: drift.Value(ref.valLista1.toInt()),
+      valLista2: drift.Value(ref.valLista2.toInt()),
+      valLista3: drift.Value(ref.valLista3.toInt()),
+      activo: drift.Value(ref.activo),
+    );
+    await _db.into(_db.referenciasMaestras).insert(companion);
+  }
+
   /// ✅ Crear un nuevo rol en la base de datos
   ///
   /// Recibe los datos del rol y los inserta en la tabla Roles.
@@ -83,12 +151,13 @@ class DriftService {
   }
 
   /// 🔍 Buscar referencia maestra por código
-  Future<ReferenciasMaestra?> buscarReferenciaMaestraPorCodigo(
+  Future<ReferenciaMaestra?> buscarReferenciaMaestraPorCodigo(
     String codRef,
   ) async {
-    return await (_db.select(
+    final row = await (_db.select(
       _db.referenciasMaestras,
     )..where((tbl) => tbl.codRef.equals(codRef))).getSingleOrNull();
+    return row != null ? ReferenciaMaestra.fromDrift(row) : null;
   }
 
   /// 📖 Obtener todos los roles
@@ -532,9 +601,11 @@ class DriftService {
     // Verificar duplicado por COD_BARRA
     if (referencia.codBarra.present) {
       final existeBarra =
-          await (_db.select(
-                _db.referenciasMaestras,
-              )..where((tbl) => tbl.codBarra.equals(referencia.codBarra.value)))
+          await (_db.select(_db.referenciasMaestras)..where(
+                (tbl) => referencia.codBarra.value == null
+                    ? tbl.codBarra.isNull()
+                    : tbl.codBarra.equals(referencia.codBarra.value!),
+              ))
               .getSingleOrNull();
       if (existeBarra != null)
         throw Exception('Ya existe una referencia con ese COD_BARRA');

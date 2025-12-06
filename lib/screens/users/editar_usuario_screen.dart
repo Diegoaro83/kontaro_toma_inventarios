@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/drift_service.dart';
 import '../../database/drift_database.dart';
+import '../../widgets/common/barra_superior_modulo.dart';
+import '../../widgets/common/barra_inferior_modulo.dart';
 
 /// ✏️ PANTALLA DE EDICIÓN DE USUARIOS - DISEÑO FIGMA
 ///
@@ -89,9 +91,27 @@ class _EditarUsuarioScreenState extends State<EditarUsuarioScreen> {
           };
         }).toList();
 
+        // Validar que el rol seleccionado exista
+        final rolIds = _rolesDisponibles.map((r) => r['id'] as String).toList();
+        if (_rolIdSeleccionado == null ||
+            !rolIds.contains(_rolIdSeleccionado)) {
+          _rolIdSeleccionado = rolIds.isNotEmpty ? rolIds.first : null;
+        }
+
         _localesDisponibles = locales.map((local) {
           return {'id': local.id, 'nombre': local.nombre, 'tipo': local.tipo};
         }).toList();
+
+        // Validar que el local seleccionado exista
+        final localIds = _localesDisponibles
+            .map((l) => l['id'] as String)
+            .toList();
+        if (_localAsignadoSeleccionado == null ||
+            !localIds.contains(_localAsignadoSeleccionado)) {
+          _localAsignadoSeleccionado = localIds.isNotEmpty
+              ? localIds.first
+              : null;
+        }
 
         _cargandoDatos = false;
       });
@@ -194,485 +214,513 @@ class _EditarUsuarioScreenState extends State<EditarUsuarioScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-        title: const Text(
-          'Editar Usuario',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFEA4747), Color(0xFF4A2020), Color(0xFF470707)],
-              stops: [0.0, 0.529, 1.0],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+      body: SafeArea(
+        child: Column(
+          children: [
+            BarraSuperiorModulo(
+              nombreEmpresa: 'Oxígeno Zero Grados',
+              subtitulo: 'Editar Usuario',
+              nombreUsuario: widget.usuario.nombreUsuario,
+              nombrePerfil: 'Dirección General', // Puedes ajustar según rol
+              estadoSistema: 'Activo',
             ),
-          ),
-        ),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: _cargandoDatos
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? 16.0 : 40.0),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildSeccionCard(
-                          icono: Icons.person_outline,
-                          colorIcono: const Color(0xFFEA4747),
-                          titulo: 'Información Personal',
-                          isMobile: isMobile,
-                          children: [
-                            if (isMobile) ...[
-                              _buildCampo(
-                                label: 'Cedula (no editable)',
-                                icono: Icons.badge_outlined,
-                                controller: _cedulaController,
-                                enabled: false,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildCampo(
-                                label: 'Nombre Completo',
-                                icono: Icons.person,
-                                controller: _nombresApellidosController,
-                                validator: (v) => v == null || v.trim().isEmpty
-                                    ? 'Requerido'
-                                    : null,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildCampo(
-                                label: 'Teléfono (opcional)',
-                                icono: Icons.phone_outlined,
-                                controller: _telefonoController,
-                                keyboardType: TextInputType.phone,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildCampo(
-                                label: 'Código (no editable)',
-                                icono: Icons.qr_code,
-                                controller: _codigoController,
-                                enabled: false,
-                              ),
-                            ] else ...[
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildCampo(
-                                      label: 'Cedula (no editable)',
-                                      icono: Icons.badge_outlined,
-                                      controller: _cedulaController,
-                                      enabled: false,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: _buildCampo(
-                                      label: 'Nombre Completo',
-                                      icono: Icons.person,
-                                      controller: _nombresApellidosController,
+            Expanded(
+              child: _cargandoDatos
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: EdgeInsets.all(isMobile ? 16.0 : 40.0),
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 900),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                _buildSeccionCard(
+                                  icono: Icons.person_outline,
+                                  colorIcono: const Color(0xFFEA4747),
+                                  titulo: 'Información Personal',
+                                  isMobile: isMobile,
+                                  children: [
+                                    // ...campos personales...
+                                    if (isMobile) ...[
+                                      _buildCampo(
+                                        label: 'Cedula (no editable)',
+                                        icono: Icons.badge_outlined,
+                                        controller: _cedulaController,
+                                        enabled: false,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCampo(
+                                        label: 'Nombre Completo',
+                                        icono: Icons.person,
+                                        controller: _nombresApellidosController,
+                                        validator: (v) =>
+                                            v == null || v.trim().isEmpty
+                                            ? 'Requerido'
+                                            : null,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCampo(
+                                        label: 'Teléfono (opcional)',
+                                        icono: Icons.phone_outlined,
+                                        controller: _telefonoController,
+                                        keyboardType: TextInputType.phone,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCampo(
+                                        label: 'Código (no editable)',
+                                        icono: Icons.qr_code,
+                                        controller: _codigoController,
+                                        enabled: false,
+                                      ),
+                                    ] else ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildCampo(
+                                              label: 'Cedula (no editable)',
+                                              icono: Icons.badge_outlined,
+                                              controller: _cedulaController,
+                                              enabled: false,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: _buildCampo(
+                                              label: 'Nombre Completo',
+                                              icono: Icons.person,
+                                              controller:
+                                                  _nombresApellidosController,
+                                              validator: (v) =>
+                                                  v == null || v.trim().isEmpty
+                                                  ? 'Requerido'
+                                                  : null,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildCampo(
+                                              label: 'Teléfono (opcional)',
+                                              icono: Icons.phone_outlined,
+                                              controller: _telefonoController,
+                                              keyboardType: TextInputType.phone,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: _buildCampo(
+                                              label: 'Código (no editable)',
+                                              icono: Icons.qr_code,
+                                              controller: _codigoController,
+                                              enabled: false,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                _buildSeccionCard(
+                                  icono: Icons.key_outlined,
+                                  colorIcono: const Color(0xFFEA4747),
+                                  titulo: 'Credenciales de Acceso',
+                                  isMobile: isMobile,
+                                  children: [
+                                    // ...campos credenciales...
+                                    _buildCampo(
+                                      label: 'Nombre de Usuario',
+                                      icono: Icons.account_circle_outlined,
+                                      controller: _nombreUsuarioController,
+                                      suffixIcon: Icons.edit_outlined,
                                       validator: (v) =>
                                           v == null || v.trim().isEmpty
                                           ? 'Requerido'
+                                          : v.trim().length < 4
+                                          ? 'Mínimo 4 caracteres'
+                                          : !RegExp(
+                                              r'^[a-zA-Z0-9._]+$',
+                                            ).hasMatch(v)
+                                          ? 'Solo letras, números, . y _'
                                           : null,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildCampo(
-                                      label: 'Teléfono (opcional)',
-                                      icono: Icons.phone_outlined,
-                                      controller: _telefonoController,
-                                      keyboardType: TextInputType.phone,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: _buildCampo(
-                                      label: 'Código (no editable)',
-                                      icono: Icons.qr_code,
-                                      controller: _codigoController,
-                                      enabled: false,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        _buildSeccionCard(
-                          icono: Icons.key_outlined,
-                          colorIcono: const Color(0xFFEA4747),
-                          titulo: 'Credenciales de Acceso',
-                          isMobile: isMobile,
-                          children: [
-                            _buildCampo(
-                              label: 'Nombre de Usuario',
-                              icono: Icons.account_circle_outlined,
-                              controller: _nombreUsuarioController,
-                              suffixIcon: Icons.edit_outlined,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Requerido'
-                                  : v.trim().length < 4
-                                  ? 'Mínimo 4 caracteres'
-                                  : !RegExp(r'^[a-zA-Z0-9._]+$').hasMatch(v)
-                                  ? 'Solo letras, números, . y _'
-                                  : null,
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF3C7),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFFF59E0B),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.info_outline,
-                                    color: Color(0xFFF59E0B),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Dejar vacía la contraseña para mantener la actual',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.amber[900],
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFEF3C7),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(0xFFF59E0B),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.info_outline,
+                                            color: Color(0xFFF59E0B),
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Dejar vacía la contraseña para mantener la actual',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.amber[900],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (isMobile) ...[
-                              _buildCampoContrasena(
-                                label: 'Nueva Contraseña (opcional)',
-                                controller: _contrasenaController,
-                                mostrar: _mostrarContrasena,
-                                onToggle: () => setState(
-                                  () =>
-                                      _mostrarContrasena = !_mostrarContrasena,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildCampoContrasena(
-                                label: 'Confirmar Nueva Contraseña',
-                                controller: _confirmarContrasenaController,
-                                mostrar: _mostrarConfirmarContrasena,
-                                onToggle: () => setState(
-                                  () => _mostrarConfirmarContrasena =
-                                      !_mostrarConfirmarContrasena,
-                                ),
-                              ),
-                            ] else ...[
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildCampoContrasena(
-                                      label: 'Nueva Contraseña (opcional)',
-                                      controller: _contrasenaController,
-                                      mostrar: _mostrarContrasena,
-                                      onToggle: () => setState(
-                                        () => _mostrarContrasena =
-                                            !_mostrarContrasena,
+                                    const SizedBox(height: 16),
+                                    if (isMobile) ...[
+                                      _buildCampoContrasena(
+                                        label: 'Nueva Contraseña (opcional)',
+                                        controller: _contrasenaController,
+                                        mostrar: _mostrarContrasena,
+                                        onToggle: () => setState(
+                                          () => _mostrarContrasena =
+                                              !_mostrarContrasena,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: _buildCampoContrasena(
-                                      label: 'Confirmar Nueva Contraseña',
-                                      controller:
-                                          _confirmarContrasenaController,
-                                      mostrar: _mostrarConfirmarContrasena,
-                                      onToggle: () => setState(
-                                        () => _mostrarConfirmarContrasena =
-                                            !_mostrarConfirmarContrasena,
+                                      const SizedBox(height: 16),
+                                      _buildCampoContrasena(
+                                        label: 'Confirmar Nueva Contraseña',
+                                        controller:
+                                            _confirmarContrasenaController,
+                                        mostrar: _mostrarConfirmarContrasena,
+                                        onToggle: () => setState(
+                                          () => _mostrarConfirmarContrasena =
+                                              !_mostrarConfirmarContrasena,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        _buildSeccionCard(
-                          icono: Icons.business_outlined,
-                          colorIcono: const Color(0xFFEA4747),
-                          titulo: 'Asignación de Rol y Tienda',
-                          isMobile: isMobile,
-                          children: [
-                            if (isMobile) ...[
-                              _buildDropdown(
-                                label: 'Rol',
-                                icono: Icons.work_outline,
-                                value: _rolIdSeleccionado,
-                                items: _rolesDisponibles,
-                                onChanged: (v) =>
-                                    setState(() => _rolIdSeleccionado = v),
-                                isRol: true,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildDropdown(
-                                label: 'Tienda Principal',
-                                icono: Icons.store_outlined,
-                                value: _localAsignadoSeleccionado,
-                                items: _localesDisponibles,
-                                onChanged: (v) => setState(
-                                  () => _localAsignadoSeleccionado = v,
-                                ),
-                                isRol: false,
-                              ),
-                            ] else ...[
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildDropdown(
-                                      label: 'Rol',
-                                      icono: Icons.work_outline,
-                                      value: _rolIdSeleccionado,
-                                      items: _rolesDisponibles,
-                                      onChanged: (v) => setState(
-                                        () => _rolIdSeleccionado = v,
+                                    ] else ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildCampoContrasena(
+                                              label:
+                                                  'Nueva Contraseña (opcional)',
+                                              controller: _contrasenaController,
+                                              mostrar: _mostrarContrasena,
+                                              onToggle: () => setState(
+                                                () => _mostrarContrasena =
+                                                    !_mostrarContrasena,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: _buildCampoContrasena(
+                                              label:
+                                                  'Confirmar Nueva Contraseña',
+                                              controller:
+                                                  _confirmarContrasenaController,
+                                              mostrar:
+                                                  _mostrarConfirmarContrasena,
+                                              onToggle: () => setState(
+                                                () => _mostrarConfirmarContrasena =
+                                                    !_mostrarConfirmarContrasena,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      isRol: true,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: _buildDropdown(
-                                      label: 'Tienda Principal',
-                                      icono: Icons.store_outlined,
-                                      value: _localAsignadoSeleccionado,
-                                      items: _localesDisponibles,
-                                      onChanged: (v) => setState(
-                                        () => _localAsignadoSeleccionado = v,
-                                      ),
-                                      isRol: false,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFEA4747,
-                                  ).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.toggle_on_outlined,
-                                  color: Color(0xFFEA4747),
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Usuario Activo',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1F2937),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Los usuarios inactivos no pueden iniciar sesión',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
+                                    ],
                                   ],
                                 ),
-                              ),
-                              Switch(
-                                value: _activoCheckbox,
-                                onChanged: (v) =>
-                                    setState(() => _activoCheckbox = v),
-                                activeColor: const Color(0xFF06B6D4),
-                                activeTrackColor: const Color(
-                                  0xFF06B6D4,
-                                ).withOpacity(0.5),
-                              ),
-                            ],
+                                const SizedBox(height: 20),
+                                _buildSeccionCard(
+                                  icono: Icons.business_outlined,
+                                  colorIcono: const Color(0xFFEA4747),
+                                  titulo: 'Asignación de Rol y Tienda',
+                                  isMobile: isMobile,
+                                  children: [
+                                    // ...dropdowns de rol y tienda...
+                                    if (isMobile) ...[
+                                      _buildDropdown(
+                                        label: 'Rol',
+                                        icono: Icons.work_outline,
+                                        value: _rolIdSeleccionado,
+                                        items: _rolesDisponibles,
+                                        onChanged: (v) => setState(
+                                          () => _rolIdSeleccionado = v,
+                                        ),
+                                        isRol: true,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildDropdown(
+                                        label: 'Tienda Principal',
+                                        icono: Icons.store_outlined,
+                                        value: _localAsignadoSeleccionado,
+                                        items: _localesDisponibles,
+                                        onChanged: (v) => setState(
+                                          () => _localAsignadoSeleccionado = v,
+                                        ),
+                                        isRol: false,
+                                      ),
+                                    ] else ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildDropdown(
+                                              label: 'Rol',
+                                              icono: Icons.work_outline,
+                                              value: _rolIdSeleccionado,
+                                              items: _rolesDisponibles,
+                                              onChanged: (v) => setState(
+                                                () => _rolIdSeleccionado = v,
+                                              ),
+                                              isRol: true,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: _buildDropdown(
+                                              label: 'Tienda Principal',
+                                              icono: Icons.store_outlined,
+                                              value: _localAsignadoSeleccionado,
+                                              items: _localesDisponibles,
+                                              onChanged: (v) => setState(
+                                                () =>
+                                                    _localAsignadoSeleccionado =
+                                                        v,
+                                              ),
+                                              isRol: false,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                // ...switch y botones...
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFFEA4747,
+                                          ).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.toggle_on_outlined,
+                                          color: Color(0xFFEA4747),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Usuario Activo',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1F2937),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Los usuarios inactivos no pueden iniciar sesión',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Switch(
+                                        value: _activoCheckbox,
+                                        onChanged: (v) =>
+                                            setState(() => _activoCheckbox = v),
+                                        activeColor: const Color(0xFF06B6D4),
+                                        activeTrackColor: const Color(
+                                          0xFF06B6D4,
+                                        ).withOpacity(0.5),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                // ...botones de acción...
+                                if (isMobile) ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        side: const BorderSide(
+                                          color: Color(0xFFD1D5DB),
+                                          width: 1.5,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Cancelar',
+                                        style: TextStyle(
+                                          color: Color(0xFF6B7280),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _actualizarUsuario,
+                                      icon: const Icon(
+                                        Icons.save,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      label: const Text(
+                                        'Guardar Cambios',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFEA4747,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        elevation: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ] else ...[
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFD1D5DB),
+                                              width: 1.5,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Cancelar',
+                                            style: TextStyle(
+                                              color: Color(0xFF6B7280),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        flex: 2,
+                                        child: ElevatedButton.icon(
+                                          onPressed: _actualizarUsuario,
+                                          icon: const Icon(
+                                            Icons.save,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                          label: const Text(
+                                            'Guardar Cambios',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFFEA4747,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            elevation: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 32),
-                        if (isMobile) ...[
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                side: const BorderSide(
-                                  color: Color(0xFFD1D5DB),
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Cancelar',
-                                style: TextStyle(
-                                  color: Color(0xFF6B7280),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: _actualizarUsuario,
-                              icon: const Icon(
-                                Icons.save,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              label: const Text(
-                                'Guardar Cambios',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFEA4747),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                elevation: 2,
-                              ),
-                            ),
-                          ),
-                        ] else ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    side: const BorderSide(
-                                      color: Color(0xFFD1D5DB),
-                                      width: 1.5,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                flex: 2,
-                                child: ElevatedButton.icon(
-                                  onPressed: _actualizarUsuario,
-                                  icon: const Icon(
-                                    Icons.save,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                  label: const Text(
-                                    'Guardar Cambios',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFEA4747),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ),
+            BarraInferiorModulo(
+              estadoSistema: 'Sistema activo',
+              ultimaSincronizacion: 'hace 2 min',
+              onVolver: () => Navigator.pop(context, false),
+              onSalir: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

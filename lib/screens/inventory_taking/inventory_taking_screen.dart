@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import 'sesiones_inventario_screen.dart';
+import 'sesiones_inventario_screen.dart' hide SizedBox;
 
 /// 📦 PANTALLA DE TOMA DE INVENTARIO (NAVEGACIÓN AUTOMÁTICA)
 ///
